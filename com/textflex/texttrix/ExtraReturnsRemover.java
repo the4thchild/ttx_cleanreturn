@@ -262,6 +262,7 @@ public class ExtraReturnsRemover extends PlugIn {//implements PlugIn {
 	   finalText += s.substring(n);
 	   return finalText;
 	*/
+	//	System.out.println(stripped.toString() + s.substring(n));
 	return new PlugInOutcome(stripped.toString() + s.substring(n));
     }
 
@@ -270,7 +271,7 @@ public class ExtraReturnsRemover extends PlugIn {//implements PlugIn {
 	@param s the full text from which to strip extra hard returns
 	@return stripped text
     */
-    public PlugInOutcome run(String s) {
+    public PlugInOutcome run(String s, int caretPosition) {
 	return run(s, 0, s.length());
     }
 

@@ -1,4 +1,4 @@
-/* TextTrix.java    
+/* ExtraReturnsRemover.java    
    Text Trix
    the text tinker
    http://textflex.com/texttrix
@@ -37,8 +37,23 @@ package com.textflex.texttrix;
 import javax.swing.*;
 import java.io.*;
 
+/** Removes extra hard returns.
+    For example, unformatted email arrives with hard returns inserted after 
+    every line; this method strips all but the paragraph, double-spaced
+    hard returns.
+    Text within <code>&#060;pre&#062;</code>
+    and <code>&#060;/pre&#062;</code> tags are
+    left untouched.  Additionally, each line whose first character is a 
+    dash, asterisk, or tab
+    gets its own line.  The line above such lines also gets to remain
+    by itself.  "&#062;" at the start of lines, such as " &#062; &#062; " 
+    from inline email message replies, are also removed.
+*/
 public class ExtraReturnsRemover extends PlugIn {//implements PlugIn {
 
+    /** Constructs the extra returns remover with descriptive text and 
+	images.
+    */
     public ExtraReturnsRemover() {
 	super("Extra Returns Remover",
 	      "tools",
@@ -48,33 +63,35 @@ public class ExtraReturnsRemover extends PlugIn {//implements PlugIn {
 	      "icon-roll.png");
     }
 
-
+    /** Gets the normal icon.
+	@return normal icon
+    */
     public ImageIcon getIcon() {
 	return super.getIcon(getIconPath());
     }
 
+    /** Gets the rollover icon.
+	@return rollover icon
+    */
     public ImageIcon getRollIcon() {
 	return super.getIcon(getRollIconPath());
     }
 
+    /** Gets the detailed, HTML-formatted description.
+	For display as a tool tip.
+	@return a buffered reader for the description file
+    */
     public BufferedReader getDetailedDescription() {
 	return super.getDetailedDescription(getDetailedDescriptionPath());
     }
 
-
-    /**Removes extra hard returns.
-     * For example, unformatted email arrives with hard returns inserted after 
-     * every line; this method strips all but the paragraph, double-spaced
-     * hard returns.
-     * Text within <code>&#060;pre&#062;</code>
-     * and <code>&#060;/pre&#062;</code> tags are
-     * left untouched.  Additionally, each line whose first character is a 
-     * dash, asterisk, or tab
-     * gets its own line.  The line above such lines also gets to remain
-     * by itself.  "&#062;" at the start of lines, such as " &#062; &#062; " 
-     * from inline email message replies, are also removed.
-     * @param s the full text from which to strip extra hard returns
-     * @return stripped text
+    /** Removes the extra hard returns.
+	Also removes ">" and similar email symbols at the start of lines.
+	Preserves lists.
+	@param s the full text from which to strip extra hard returns
+	@param start index in <code>s</code> at which to start manipulation
+	@param end index in <code>s</code> at which to no longer manipulate
+	@return stripped text
      */
     public String run(String s, int start, int end) {
 	/* This function works by generally checking the characters afer
@@ -89,7 +106,7 @@ public class ExtraReturnsRemover extends PlugIn {//implements PlugIn {
 	int n = start; // string index
 	String searchChars = " >"; // inline message reply chars
 	String inlineReplySigns = ">"; // inline message indicators
-	boolean isCurrentLineReply = false; // current line part of message reply
+	boolean isCurrentLineReply = false; // current line part of msg reply
 	boolean isNextLineReply = false; // next line part of message reply
 	boolean ignorePre = false; // ignore <pre>'s within inline replies
 
@@ -108,7 +125,7 @@ public class ExtraReturnsRemover extends PlugIn {//implements PlugIn {
 	while (n < end) {
 	    int inlineReply = 0; // eg ">" or "<" from inline email msg replies
 	    int nextInlineReply = 0; // inline replies on next line
-	    int singleReturn = s.indexOf("\n", n); // next hard return occurrence
+	    int singleReturn = s.indexOf("\n", n); // next hard return
 	    boolean isDoubleReturn = false; // double hard return flag
 	    boolean isDash = false; // dash flag
 	    boolean isAsterisk = false; // asterisk flag
@@ -184,7 +201,8 @@ public class ExtraReturnsRemover extends PlugIn {//implements PlugIn {
 		}
 		// add the rest of the text if no more single returns exist.
 		// Also catches null strings
-		// Skips final "--------" for inline replies if no singleReturn after
+		// Skips final "--------" for inline replies w/ no 
+		// later singleReturn
 	    } else if (singleReturn == -1) {
 		stripped.append(s.substring(n, end));
 		/* to add final dashed line after reply, even when no final
@@ -247,20 +265,25 @@ public class ExtraReturnsRemover extends PlugIn {//implements PlugIn {
 	return stripped.toString() + s.substring(n);
     }
 
+    /** Front-end for the extra returns remover; assumes that the remover 
+	should tinker with entire text should be tinkered with.
+	@param s the full text from which to strip extra hard returns
+	@return stripped text
+    */
     public String run(String s) {
 	return run(s, 0, s.length());
     }
 
 
-    /**Finds the first continuous string consisting of any of a given
-     * set of chars and returns the sequence's length if it contains any of 
-     * another given set of chars.
-     * @param seq string to search
-     * @param start <code>seq</code>'s index at which to start searching
-     * @param chars chars for which to search in <code>seq</code>
-     * @param innerChars required chars to return the length of the first
-     * continuous string of chars from <code>chars</code>; if no
-     * <code>innerChars</code> are found, returns 0
+    /** Finds the first continuous string consisting of any of a given
+	set of chars and returns the sequence's length if it contains any of 
+	another given set of chars.
+	@param seq string to search
+	@param start <code>seq</code>'s index at which to start searching
+	@param chars chars for which to search in <code>seq</code>
+	@param innerChars required chars to return the length of the first
+	continuous string of chars from <code>chars</code>; if no
+	<code>innerChars</code> are found, returns 0
      */
     public int containingSeq(String seq, int start, 
 				    String chars, String innerChars) {

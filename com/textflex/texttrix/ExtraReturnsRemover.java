@@ -87,19 +87,6 @@ public class ExtraReturnsRemover extends PlugIn { //implements PlugIn {
 	public BufferedReader getDetailedDescription() {
 		return super.getDetailedDescription(getDetailedDescriptionPath());
 	}
-
-	/** Removes the extra hard returns.
-	Also removes ">" and similar email symbols at the start of lines.
-	Preserves lists.
-	@param s the full text from which to strip extra hard returns
-	@param start index in <code>s</code> at which to start manipulation
-	@param end index in <code>s</code> at which to no longer manipulate
-	@return stripped text
-	 *
-	public PlugInOutcome run(String s, int start, int end) {
-		return run(s);
-	}
-	*/
 	
 	public PlugInOutcome run(String s) {
 		/* This function works by generally checking the characters afer
@@ -124,7 +111,7 @@ public class ExtraReturnsRemover extends PlugIn { //implements PlugIn {
 		//stripped.append(s.substring(0, n));
 		// check for inline reply symbols at start of string
 		n = containingSeq(s, n, searchChars, inlineReplySigns);
-		System.out.println("n: " + n);
+		//System.out.println("n: " + n);
 		if (s.indexOf("<pre>") == 0 || n == 0) {// start || start != 0) {
 			isCurrentLineReply = false;
 		} else {

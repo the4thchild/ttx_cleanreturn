@@ -212,6 +212,12 @@ public class ExtraReturnsRemover extends PlugIn {//implements PlugIn {
 	*/
 	return stripped.toString() + s.substring(n);
     }
+
+    public String run(String s) {
+	return run(s, 0, s.length());
+    }
+
+
     /**Finds the first continuous string consisting of any of a given
      * set of chars and returns the sequence's length if it contains any of 
      * another given set of chars.

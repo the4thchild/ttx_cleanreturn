@@ -50,15 +50,15 @@ public class ExtraReturnsRemover extends PlugIn {//implements PlugIn {
 
 
     public ImageIcon getIcon() {
-	return super.getIcon(getIconPath(), this.getClass());
+	return super.getIcon(getIconPath());
     }
 
     public ImageIcon getRollIcon() {
-	return super.getIcon(getRollIconPath(), this.getClass());
+	return super.getIcon(getRollIconPath());
     }
 
     public BufferedReader getDetailedDescription() {
-	return super.getDetailedDescription(getDetailedDescriptionPath(), this.getClass());
+	return super.getDetailedDescription(getDetailedDescriptionPath());
     }
 
 

@@ -225,7 +225,7 @@ public class ExtraReturnsRemover extends PlugIn { //implements PlugIn {
 				// Skips final "--------" for inline replies w/ no 
 				// later singleReturn
 			} else if (singleReturn == -1) {
-				System.out.println("n: " + n + ", end: " + end + ", char b4 end: " + s.charAt(end - 1));
+				//System.out.println("n: " + n + ", end: " + end + ", char b4 end: " + s.charAt(end - 1));
 				stripped.append(s.substring(n, end));
 				/* to add final dashed line after reply, even when no final
 				 * return, uncomment these lines

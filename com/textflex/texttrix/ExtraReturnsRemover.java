@@ -95,8 +95,13 @@ public class ExtraReturnsRemover extends PlugIn { //implements PlugIn {
 	@param start index in <code>s</code> at which to start manipulation
 	@param end index in <code>s</code> at which to no longer manipulate
 	@return stripped text
-	 */
+	 *
 	public PlugInOutcome run(String s, int start, int end) {
+		return run(s);
+	}
+	*/
+	
+	public PlugInOutcome run(String s) {
 		/* This function works by generally checking the characters afer
 		 * a hard return to determine whether to keep it or not.
 		 * To strip inline message reply characters, the function must also
@@ -106,7 +111,9 @@ public class ExtraReturnsRemover extends PlugIn { //implements PlugIn {
 		 */
 		int len = s.length();
 		StringBuffer stripped = new StringBuffer(len); // new string
-		int n = start; // string index
+		//int n = start; // string index
+		int n = 0;
+		int end = len;
 		String searchChars = " >"; // inline message reply chars
 		String inlineReplySigns = ">"; // inline message indicators
 		boolean isCurrentLineReply = false; // current line part of msg reply
@@ -114,10 +121,11 @@ public class ExtraReturnsRemover extends PlugIn { //implements PlugIn {
 		boolean ignorePre = false; // ignore <pre>'s within inline replies
 
 		// append text preceding the selection
-		stripped.append(s.substring(0, n));
+		//stripped.append(s.substring(0, n));
 		// check for inline reply symbols at start of string
 		n = containingSeq(s, n, searchChars, inlineReplySigns);
-		if (s.indexOf("<pre>") == 0 || n == start) {
+		System.out.println("n: " + n);
+		if (s.indexOf("<pre>") == 0 || n == 0) {// start || start != 0) {
 			isCurrentLineReply = false;
 		} else {
 			isCurrentLineReply = true;
@@ -149,7 +157,7 @@ public class ExtraReturnsRemover extends PlugIn { //implements PlugIn {
 						afterSingRet,
 						searchChars,
 						inlineReplySigns);
-				// if the reply chars contine another hard return, 
+				// if the reply chars continue another hard return, 
 				// find the length
 				// of reply chars after it
 				if (s.length() > (afterSingRet += inlineReply)
@@ -217,6 +225,7 @@ public class ExtraReturnsRemover extends PlugIn { //implements PlugIn {
 				// Skips final "--------" for inline replies w/ no 
 				// later singleReturn
 			} else if (singleReturn == -1) {
+				System.out.println("n: " + n + ", end: " + end + ", char b4 end: " + s.charAt(end - 1));
 				stripped.append(s.substring(n, end));
 				/* to add final dashed line after reply, even when no final
 				 * return, uncomment these lines
@@ -280,17 +289,18 @@ public class ExtraReturnsRemover extends PlugIn { //implements PlugIn {
 		   return finalText;
 		*/
 		//	System.out.println(stripped.toString() + s.substring(n));
-		return new PlugInOutcome(stripped.toString() + s.substring(n));
+		return new PlugInOutcome(stripped.toString());// + s.substring(n));
 	}
 
 	/** Front-end for the extra returns remover; assumes that the remover 
 	should tinker with entire text should be tinkered with.
 	@param s the full text from which to strip extra hard returns
 	@return stripped text
-	*/
+	*
 	public PlugInOutcome run(String s, int caretPosition) {
-		return run(s, 0, s.length());
+		return run(s);
 	}
+	*/
 
 	/** Finds the first continuous string consisting of any of a given
 	set of chars and returns the sequence's length if it contains any of 

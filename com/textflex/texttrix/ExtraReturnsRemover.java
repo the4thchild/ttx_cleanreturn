@@ -38,6 +38,10 @@ package com.textflex.texttrix;
 
 import javax.swing.*;
 import java.io.*;
+import javax.swing.event.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.util.*;
 
 /** Removes extra hard returns.
     For example, unformatted email arrives with hard returns inserted after 
@@ -51,7 +55,13 @@ import java.io.*;
     by itself.  "&#062;" at the start of lines, such as " &#062; &#062; " 
     from inline email message replies, are also removed.
 */
-public class ExtraReturnsRemover extends PlugIn { //implements PlugIn {
+public class ExtraReturnsRemover extends PlugInWindow { //implements PlugIn {
+
+	private ExtraReturnsRemoverDialog diag = null;
+	private String lists = "";
+	private int threshold = 0;
+	private boolean emailMarkers = false;
+	private boolean selectedRegion = false;
 
 	/** Constructs the extra returns remover with descriptive text and 
 	images.
@@ -64,6 +74,48 @@ public class ExtraReturnsRemover extends PlugIn { //implements PlugIn {
 			"desc.html",
 			"icon.png",
 			"icon-roll.png");
+		setAlwaysEntireText(true); // retrieve the entire body of text
+
+		// Runs the search tool in "find" mode if the user hits "Enter" in 
+		// the "Find" box;
+		KeyAdapter removerEnter = new KeyAdapter() {
+			public void keyPressed(KeyEvent evt) {
+				if (evt.getKeyCode() == KeyEvent.VK_ENTER) {
+					runPlugIn();
+				}
+			}
+		};
+
+
+		// Runs the search tool in "find" mode if the user hits the "Find"
+		// button;
+		// creates a shortcut key (alt-F) as an alternative way to invoke
+		// the button
+		Action extraReturnsRemoverAction = new AbstractAction("Extra Returns Remover", null) {
+			public void actionPerformed(ActionEvent e) {
+				applyUserOptions();
+				runPlugIn();
+			}
+		};
+		LibTTx.setAcceleratedAction(
+			extraReturnsRemoverAction,
+			"Remover",
+			'R',
+			KeyStroke.getKeyStroke("alt R"));
+
+		// Creates the options dialog window
+		diag =
+			new ExtraReturnsRemoverDialog(
+				removerEnter,
+				extraReturnsRemoverAction);
+		setWindow(diag);
+	}
+	
+	public void applyUserOptions() {
+		lists = diag.getLists();
+		threshold = diag.getThreshold();
+		emailMarkers = diag.getEmailMarkers();
+		selectedRegion = diag.getSelectedRegion();
 	}
 
 	/** Gets the normal icon.
@@ -89,6 +141,10 @@ public class ExtraReturnsRemover extends PlugIn { //implements PlugIn {
 	}
 	
 	public PlugInOutcome run(String s) {
+		return run(s, 0, 0);
+	}
+
+	public PlugInOutcome run(String s, int x, int y) {
 		/* This function works by generally checking the characters afer
 		 * a hard return to determine whether to keep it or not.
 		 * To strip inline message reply characters, the function must also
@@ -96,17 +152,34 @@ public class ExtraReturnsRemover extends PlugIn { //implements PlugIn {
 		 * function completely excludes pre-tag-delimited areas from hard
 		 * return removal.
 		 */
-		int len = s.length();
-		StringBuffer stripped = new StringBuffer(len); // new string
+		//int len = s.length();
 		//int n = start; // string index
-		int n = 0;
-		int end = len;
+		int n = x;
+		int end = y;//len;
+		if (!selectedRegion) {
+			n = 0;
+			end = s.length();
+		}
+		StringBuffer stripped = new StringBuffer(end - n); // new string
 		String searchChars = " >"; // inline message reply chars
 		String inlineReplySigns = ">"; // inline message indicators
 		boolean isCurrentLineReply = false; // current line part of msg reply
 		boolean isNextLineReply = false; // next line part of message reply
 		boolean ignorePre = false; // ignore <pre>'s within inline replies
-
+		StringTokenizer listTok = new StringTokenizer(lists, ",");
+		int listCount = listTok.countTokens();
+		ListLookup[] listDelims = new ListLookup[listCount];
+		for (int i = 0; i < listCount; i++) {
+			listDelims[i] = new ListLookup(listTok.nextToken());
+		}
+		String outlineChars = "1234567890ivxlcdm";
+		String emailMarkerStart = "----Original Message----\n\n";
+		String emailMarkerEnd = "\n-----------------------";
+		if (!emailMarkers) {
+			emailMarkerStart = "";
+			emailMarkerEnd = "";
+		}
+		
 		// append text preceding the selection
 		//stripped.append(s.substring(0, n));
 		// check for inline reply symbols at start of string
@@ -116,7 +189,7 @@ public class ExtraReturnsRemover extends PlugIn { //implements PlugIn {
 			isCurrentLineReply = false;
 		} else {
 			isCurrentLineReply = true;
-			stripped.append("----Original Message----\n\n"); // mark replies
+			stripped.append(emailMarkerStart); // mark replies
 			ignorePre = true;
 		}
 
@@ -125,11 +198,14 @@ public class ExtraReturnsRemover extends PlugIn { //implements PlugIn {
 			int nextInlineReply = 0; // inline replies on next line
 			int singleReturn = s.indexOf("\n", n); // next hard return
 			boolean isDoubleReturn = false; // double hard return flag
+			/*
 			boolean isDash = false; // dash flag
 			boolean isAsterisk = false; // asterisk flag
 			boolean isNumber = false; // number flag
 			boolean isLetterList = false; // lettered list flag
 			boolean isTab = false; // tab flag
+			*/
+			boolean isList = false;
 			int startPre = s.indexOf("<pre>", n); // next opening pre tag
 			int endPre = s.indexOf("</pre>", n); // next cloisng pre tag
 
@@ -157,10 +233,39 @@ public class ExtraReturnsRemover extends PlugIn { //implements PlugIn {
 							searchChars,
 							inlineReplySigns);
 				}
+				
 				// check whether the character after a return is a 
 				// tab, dash, asterisk, or number
+				
+				// char right after inline reply marker
 				int afterInlineReply = singleReturn + inlineReply + 1;
 				if (afterInlineReply < s.length()) {
+					int listEndPos = -1;
+					String delimiter = "";
+					String outlineIncrementor = "";
+					for (int i = 0; !isList && i < listDelims.length; i++) {
+						delimiter = listDelims[i].getDelimiter();
+						if (!listDelims[i].getOutline()) {
+							isList = s.startsWith(delimiter, afterInlineReply);
+						} else if ((listEndPos = s.indexOf(delimiter, afterInlineReply)) > 0) {
+							isList = true;
+							outlineIncrementor = s.substring(afterInlineReply, listEndPos);
+							for (int j = 0; isList && j < outlineIncrementor.length(); j++) {
+								isList = 
+									outlineChars.indexOf(outlineIncrementor.substring(j, j + 1).toLowerCase())
+									!= -1;
+							}
+							if (!isList) {
+								isList = true;
+								String firstChar = outlineIncrementor.substring(0, 1).toLowerCase();
+								for (int j = 1; isList && j < outlineIncrementor.length(); j++) {
+									isList = 
+										outlineIncrementor.substring(j, j + 1).toLowerCase().equals(firstChar);
+								}
+							}
+						}
+					}
+					/*
 					isTab = s.startsWith("\t", afterInlineReply);
 					isDash = s.startsWith("-", afterInlineReply);
 					isAsterisk = s.startsWith("*", afterInlineReply);
@@ -185,6 +290,7 @@ public class ExtraReturnsRemover extends PlugIn { //implements PlugIn {
 								!= -1)
 							? true
 							: false;
+					*/
 				}
 			}
 			isNextLineReply =
@@ -217,14 +323,19 @@ public class ExtraReturnsRemover extends PlugIn { //implements PlugIn {
 				/* to add final dashed line after reply, even when no final
 				 * return, uncomment these lines
 				 if (isCurrentReply)
-				 stripped.append("\n-----------------------\n\n");
+					stripped.append(emailMarkerEnd);
 				*/
 				n = end;
+				
+			} else if (singleReturn - n < threshold) {
+				stripped.append(s.substring(n, singleReturn + 1));
+				n = singleReturn + 1;
+				
 				// mark that start of inline message reply
 			} else if (!isCurrentLineReply && isNextLineReply) {
 				stripped.append(
 					s.substring(n, singleReturn)
-						+ "\n\n----Original Message----\n\n");
+						+ "\n\n" + emailMarkerStart);
 				n =
 					(isDoubleReturn)
 						? (singleReturn + inlineReply + 2 + nextInlineReply)
@@ -234,7 +345,7 @@ public class ExtraReturnsRemover extends PlugIn { //implements PlugIn {
 				// dashed start, so own line
 				stripped.append(
 					s.substring(n, singleReturn)
-						+ "\n------------------------\n\n");
+						+ emailMarkerEnd + "\n\n");
 				n =
 					(isDoubleReturn)
 						? (singleReturn + inlineReply + 2 + nextInlineReply)
@@ -246,8 +357,8 @@ public class ExtraReturnsRemover extends PlugIn { //implements PlugIn {
 				n = singleReturn + inlineReply + 2 + nextInlineReply;
 				// preserve separate lines for lines starting w/
 				// dashes, asterisks, numbers, or tabs, as in lists
-			} else if (
-				isDash || isAsterisk || isNumber || isLetterList || isTab) {
+			} else if (isList) {
+				//isDash || isAsterisk || isNumber || isLetterList || isTab) {
 				// + 2 to pick up the dash
 				stripped.append(s.substring(n, singleReturn + 1));
 				n = singleReturn + inlineReply + 1;
@@ -278,6 +389,24 @@ public class ExtraReturnsRemover extends PlugIn { //implements PlugIn {
 		//	System.out.println(stripped.toString() + s.substring(n));
 		return new PlugInOutcome(stripped.toString());// + s.substring(n));
 	}
+	
+	private class ListLookup {
+		private String delimiter = "";
+		private boolean outline = false;
+		private String outlineStr = "[outline]";
+		private int outlineStrLen = outlineStr.length();
+		
+		public ListLookup(String aDelimiter) {
+			delimiter = aDelimiter;
+			if (aDelimiter.toLowerCase().startsWith(outlineStr)) {
+				outline = true;
+				delimiter = aDelimiter.substring(outlineStrLen);
+			}
+		}
+		
+		public String getDelimiter() { return delimiter; }
+		public boolean getOutline() { return outline; }
+	}
 
 	/** Finds the first continuous string consisting of any of a given
 	set of chars and returns the sequence's length if it contains any of 
@@ -307,4 +436,184 @@ public class ExtraReturnsRemover extends PlugIn { //implements PlugIn {
 		return (inSeq) ? i - start : 0;
 	}
 
+}
+
+/** Find and replace dialog.
+    Creates a dialog box accepting input for search and replacement 
+    expressions as well as options to tailor the search.
+*/
+class ExtraReturnsRemoverDialog extends JPanel {//JFrame {
+	JLabel tips = null; // offers tips on using the plug-in 
+	JLabel listsLbl = null; // label for the search field
+	JTextField listsFld = null; // search expression input
+	JLabel thresholdLbl = null; // label for the replacement field
+	SpinnerNumberModel thresholdMdl = null;
+	JSpinner thresholdSpinner = null; // replacement expression input
+	JCheckBox emailMarkersChk = null; // reply boundaries
+	JCheckBox selectedRegionChk = null; // only work on selected region
+	JLabel resultsTitleLbl = null;
+	JLabel resultsLbl = null;
+	JButton removerBtn = null; // label for the search button
+
+	/**Construct a find/replace dialog box
+	 * @param owner frame to which the dialog box will be attached; 
+	 * can be null
+	 */
+	public ExtraReturnsRemoverDialog(
+		KeyAdapter removerEnter,
+		Action extraReturnsRemoverAction) {
+		super(new GridBagLayout());
+		setSize(300, 150);
+		GridBagConstraints constraints = new GridBagConstraints();
+		constraints.fill = GridBagConstraints.HORIZONTAL;
+		constraints.anchor = GridBagConstraints.CENTER;
+		String msg = "";
+
+		// keeps the given number of last-opened files in memory for quick re-opening
+		JLabel thresholdLbl =
+			new JLabel("Minimum length of line:");
+		String thresholdTipTxt =
+			"<html>The minimum number of characters that a line must"
+				+ "<br>contain before the Extra Return Remove will"
+				+ "<br>check for an extra return.</html>";
+		thresholdLbl.setToolTipText(thresholdTipTxt);
+		thresholdMdl =
+			new SpinnerNumberModel(0, 0, 100, 5);
+		thresholdSpinner = new JSpinner(thresholdMdl);
+
+		// tips display
+		tips = new JLabel("Welcome to ERR, the Extra Returns Remover!");
+		LibTTx.addGridBagComponent(
+			tips,
+			constraints,
+			0,
+			0,
+			2,
+			1,
+			100,
+			0,
+			this);//contentPane);
+
+		// search expression input
+		listsLbl = new JLabel("List delimiters:");
+		LibTTx.addGridBagComponent(
+			listsLbl,
+			constraints,
+			0,
+			1,
+			1,
+			1,
+			100,
+			0,
+			this);
+		listsFld = new JTextField("-,[outline].,[outline]),*", 20);
+		LibTTx.addGridBagComponent(
+			listsFld,
+			constraints,
+			1,
+			1,
+			1,
+			1,
+			100,
+			0,
+			this);//contentPane);
+		listsFld.addKeyListener(removerEnter);
+		
+		// Threshold placement
+		LibTTx.addGridBagComponent(
+			thresholdLbl,
+			constraints,
+			0,
+			2,
+			1,
+			1,
+			100,
+			0,
+			this);
+		LibTTx.addGridBagComponent(
+			thresholdSpinner,
+			constraints,
+			1,
+			2,
+			1,
+			1,
+			100,
+			0,
+			this);//contentPane);
+		
+		// treat search expression as a separate word
+		emailMarkersChk = new JCheckBox("Email Reply Region Markers");
+		LibTTx.addGridBagComponent(
+			emailMarkersChk,
+			constraints,
+			0,
+			3,
+			2,
+			1,
+			100,
+			0,
+			this);//contentPane);
+		emailMarkersChk.setMnemonic(KeyEvent.VK_E);
+		msg = "Marks the start and end of a region stripped of email reply markers";
+		emailMarkersChk.setToolTipText(msg);
+		
+		// replace all instances within highlighted section
+		selectedRegionChk = new JCheckBox("Selected area only");
+		LibTTx.addGridBagComponent(
+			selectedRegionChk,
+			constraints,
+			0,
+			4,
+			2,
+			1,
+			100,
+			0,
+			this);//contentPane);
+		selectedRegionChk.setMnemonic(KeyEvent.VK_S);
+		msg = "Removes extra returns only within the highlighted section";
+		selectedRegionChk.setToolTipText(msg);
+		
+		resultsTitleLbl = new JLabel("Reults: ");
+		LibTTx.addGridBagComponent(
+			resultsTitleLbl,
+			constraints,
+			0,
+			5,
+			1,
+			1,
+			100,
+			0,
+			this);//contentPane);
+
+		resultsLbl = new JLabel("");
+		resultsLbl.setHorizontalAlignment(JLabel.RIGHT);
+		LibTTx.addGridBagComponent(
+			resultsLbl,
+			constraints,
+			1,
+			5,
+			1,
+			1,
+			100,
+			0,
+			this);//contentPane);
+
+		// fires the "find" action
+		removerBtn = new JButton(extraReturnsRemoverAction);
+		LibTTx.addGridBagComponent(
+			removerBtn,
+			constraints,
+			0,
+			6,
+			2,
+			1,
+			100,
+			0,
+			this);//contentPane);
+	}
+	
+	public String getLists() { return listsFld.getText(); }
+	public int getThreshold() { return thresholdMdl.getNumber().intValue(); }
+	public boolean getEmailMarkers() { return emailMarkersChk.isSelected(); }
+	public boolean getSelectedRegion() { return selectedRegionChk.isSelected(); }
 }

@@ -279,16 +279,6 @@ public class ExtraReturnsRemover extends PlugIn { //implements PlugIn {
 		return new PlugInOutcome(stripped.toString());// + s.substring(n));
 	}
 
-	/** Front-end for the extra returns remover; assumes that the remover 
-	should tinker with entire text should be tinkered with.
-	@param s the full text from which to strip extra hard returns
-	@return stripped text
-	*
-	public PlugInOutcome run(String s, int caretPosition) {
-		return run(s);
-	}
-	*/
-
 	/** Finds the first continuous string consisting of any of a given
 	set of chars and returns the sequence's length if it contains any of 
 	another given set of chars.

@@ -70,14 +70,14 @@ public class ExtraReturnsRemover extends PlugIn {//implements PlugIn {
 	@return normal icon
     */
     public ImageIcon getIcon() {
-	return super.getIcon(getIconPath());
+	return getIcon(getIconPath());
     }
 
     /** Gets the rollover icon.
 	@return rollover icon
     */
     public ImageIcon getRollIcon() {
-	return super.getIcon(getRollIconPath());
+	return getRollIcon(getRollIconPath());
     }
 
     /** Gets the detailed, HTML-formatted description.

@@ -76,8 +76,7 @@ public class ExtraReturnsRemover extends PlugInWindow { //implements PlugIn {
 			"icon-roll.png");
 		setAlwaysEntireText(true); // retrieve the entire body of text
 
-		// Runs the search tool in "find" mode if the user hits "Enter" in 
-		// the "Find" box;
+		// Runs the plug-in if the user hits "Enter" in components with this adapter
 		KeyAdapter removerEnter = new KeyAdapter() {
 			public void keyPressed(KeyEvent evt) {
 				if (evt.getKeyCode() == KeyEvent.VK_ENTER) {
@@ -87,11 +86,12 @@ public class ExtraReturnsRemover extends PlugInWindow { //implements PlugIn {
 		};
 
 
-		// Runs the search tool in "find" mode if the user hits the "Find"
+		// Runs the plug-in if the user hits the "Extra Returns Remover"
 		// button;
-		// creates a shortcut key (alt-F) as an alternative way to invoke
+		// creates a shortcut key (alt-E) as an alternative way to invoke
 		// the button
-		Action extraReturnsRemoverAction = new AbstractAction("Extra Returns Remover", null) {
+		Action extraReturnsRemoverAction = 
+			new AbstractAction("Extra Returns Remover", null) {
 			public void actionPerformed(ActionEvent e) {
 				applyUserOptions();
 				runPlugIn();
@@ -99,9 +99,9 @@ public class ExtraReturnsRemover extends PlugInWindow { //implements PlugIn {
 		};
 		LibTTx.setAcceleratedAction(
 			extraReturnsRemoverAction,
-			"Remover",
-			'R',
-			KeyStroke.getKeyStroke("alt R"));
+			"Extra Returns Remover",
+			'E',
+			KeyStroke.getKeyStroke("alt E"));
 
 		// Creates the options dialog window
 		diag =
@@ -641,7 +641,7 @@ class ExtraReturnsRemoverDialog extends JPanel {//JFrame {
 			100,
 			0,
 			this);//contentPane);
-		emailMarkersChk.setMnemonic(KeyEvent.VK_E);
+		emailMarkersChk.setMnemonic(KeyEvent.VK_M);
 		msg = "Marks the start and end of a region stripped of email reply markers";
 		emailMarkersChk.setToolTipText(msg);
 		

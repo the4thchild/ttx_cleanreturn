@@ -194,6 +194,7 @@ public class ExtraReturnsRemover extends PlugInWindow { //implements PlugIn {
 		int startPre = 0; // next opening pre tag
 		int endPre = 0; // next cloisng pre tag
 		int lineStart = LibTTx.reverseIndexOf(s, "\n", n - 1) + 1;
+		int returnsRemoved = 0;
 		
 		// List markers
 		
@@ -229,6 +230,7 @@ public class ExtraReturnsRemover extends PlugInWindow { //implements PlugIn {
 			// of message to prevent splitting reply region if text highlighted
 			// in middle of such a region
 			if (n == 0) stripped.append(emailMarkerStart);
+			n += inlineReply;
 		}
 		
 		/* Cycle through the lines from the first to the last */
@@ -410,6 +412,7 @@ public class ExtraReturnsRemover extends PlugInWindow { //implements PlugIn {
 				} else {
 					stripped.append(s.substring(n, singleReturn) + " ");
 				}
+				returnsRemoved++;
 				n = singleReturn + inlineReply + 1;
 			}
 			// flag whether the current line is part of a msg reply
@@ -425,18 +428,20 @@ public class ExtraReturnsRemover extends PlugInWindow { //implements PlugIn {
 		// Create the new string and display the results, both in the TextPad
 		// and summarized in the plug-in window
 		String strippedStr = stripped.toString() + s.substring(n); // the final product
+		/*
 		int fewerChars = s.length() - strippedStr.length(); // change in length
 		// explanation of smaller, possibly negative changes in length
 		String emailMarkerExp = (emailMarkers) 
 			? " (minus a bunch of mail markers)" : "";
+		*/
 		// the result templates...
 		String[] results = {
-			"Unloaded " + fewerChars + " characters" + emailMarkerExp,
-			"Welcome to text lite!  " + fewerChars 
-				+ " characters removed" + emailMarkerExp,
-			fewerChars + " extraneous characters...gone" + emailMarkerExp,
-			"Nice and slick with " + fewerChars 
-				+ " fewer characters" + emailMarkerExp
+			"Unloaded " + returnsRemoved + " useless hard returns",
+			"Welcome to text lite!  " + returnsRemoved
+				+ " hard returns removed",
+			returnsRemoved + " extraneous hard returns...gone",
+			"Nice and slick with " + returnsRemoved
+				+ " fewer hard returns"
 		};
 		// ...chosen randomly
 		displayResults(results, 4);

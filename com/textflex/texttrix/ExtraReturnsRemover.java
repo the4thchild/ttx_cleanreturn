@@ -179,22 +179,35 @@ public class ExtraReturnsRemover extends PlugInWindow { //implements PlugIn {
 			emailMarkerStart = "";
 			emailMarkerEnd = "";
 		}
+		int inlineReply = 0; // eg ">" or "<" from inline email msg replies
 		
 		// append text preceding the selection
-		//stripped.append(s.substring(0, n));
+		stripped.append(s.substring(0, n));
 		// check for inline reply symbols at start of string
-		n = containingSeq(s, n, searchChars, inlineReplySigns);
+		inlineReply = containingSeq(s, n, searchChars, inlineReplySigns);
+		if (s.indexOf("<pre>", n) != n && inlineReply != 0) {
+			isCurrentLineReply = true;
+			// mark reply region as "Original Message", but only if at start
+			// of message to prevent splitting reply region if text highlighted
+			// in middle of such a region
+			if (n == 0) stripped.append(emailMarkerStart);
+		}
+		/*
 		//System.out.println("n: " + n);
-		if (s.indexOf("<pre>") == 0 || n == 0) {// start || start != 0) {
+		if (s.indexOf("<pre>") == 0 || inlineReply == 0) {// start || start != 0) {
 			isCurrentLineReply = false;
 		} else {
 			isCurrentLineReply = true;
-			stripped.append(emailMarkerStart); // mark replies
+			// mark reply region as "Original Message", but only if at start
+			// of message to prevent splitting reply region if text highlighted
+			// in middle of such a region
+			if (n == 0) stripped.append(emailMarkerStart);
 			ignorePre = true;
 		}
+		*/
 
 		while (n < end) {
-			int inlineReply = 0; // eg ">" or "<" from inline email msg replies
+			inlineReply = 0; // eg ">" or "<" from inline email msg replies
 			int nextInlineReply = 0; // inline replies on next line
 			int singleReturn = s.indexOf("\n", n); // next hard return
 			boolean isDoubleReturn = false; // double hard return flag
@@ -387,7 +400,7 @@ public class ExtraReturnsRemover extends PlugInWindow { //implements PlugIn {
 		   return finalText;
 		*/
 		//	System.out.println(stripped.toString() + s.substring(n));
-		return new PlugInOutcome(stripped.toString());// + s.substring(n));
+		return new PlugInOutcome(stripped.toString() + s.substring(n));
 	}
 	
 	private class ListLookup {

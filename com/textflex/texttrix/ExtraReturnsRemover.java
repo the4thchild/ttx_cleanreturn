@@ -93,7 +93,7 @@ public class ExtraReturnsRemover extends PlugIn {//implements PlugIn {
 	@param end index in <code>s</code> at which to no longer manipulate
 	@return stripped text
      */
-    public String run(String s, int start, int end) {
+    public PlugInOutcome run(String s, int start, int end) {
 	/* This function works by generally checking the characters afer
 	 * a hard return to determine whether to keep it or not.
 	 * To strip inline message reply characters, the function must also
@@ -262,7 +262,7 @@ public class ExtraReturnsRemover extends PlugIn {//implements PlugIn {
 	   finalText += s.substring(n);
 	   return finalText;
 	*/
-	return stripped.toString() + s.substring(n);
+	return new PlugInOutcome(stripped.toString() + s.substring(n));
     }
 
     /** Front-end for the extra returns remover; assumes that the remover 
@@ -270,7 +270,7 @@ public class ExtraReturnsRemover extends PlugIn {//implements PlugIn {
 	@param s the full text from which to strip extra hard returns
 	@return stripped text
     */
-    public String run(String s) {
+    public PlugInOutcome run(String s) {
 	return run(s, 0, s.length());
     }
 

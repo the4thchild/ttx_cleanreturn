@@ -553,7 +553,7 @@ class ExtraReturnsRemoverDialog extends JPanel {//JFrame {
 		KeyAdapter removerEnter,
 		Action extraReturnsRemoverAction) {
 		super(new GridBagLayout());
-		setSize(300, 150);
+		setSize(350, 200);
 		GridBagConstraints constraints = new GridBagConstraints();
 		constraints.fill = GridBagConstraints.HORIZONTAL;
 		constraints.anchor = GridBagConstraints.CENTER;

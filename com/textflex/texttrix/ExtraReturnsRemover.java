@@ -667,7 +667,7 @@ class ExtraReturnsRemoverDialog extends JPanel {//JFrame {
 		selectedRegionChk.setToolTipText(msg);
 		
 		// Displays the results of the removal
-		resultsTitleLbl = new JLabel("Reults: ");
+		resultsTitleLbl = new JLabel("Results: ");
 		LibTTx.addGridBagComponent(
 			resultsTitleLbl,
 			constraints,

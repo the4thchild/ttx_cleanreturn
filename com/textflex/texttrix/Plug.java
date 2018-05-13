@@ -55,7 +55,7 @@ import java.util.*;
     by itself.  "&#062;" at the start of lines, such as " &#062; &#062; " 
     from inline email message replies, are also removed.
 */
-public class ExtraReturnsRemover extends PlugInWindow { //implements PlugIn {
+public class Plug extends PlugInWindow { //implements PlugIn {
 
 	private ExtraReturnsRemoverDialog diag = null;
 	private String lists = "";
@@ -66,7 +66,7 @@ public class ExtraReturnsRemover extends PlugInWindow { //implements PlugIn {
 	/** Constructs the extra returns remover with descriptive text and 
 	images.
 	*/
-	public ExtraReturnsRemover() {
+	public Plug() {
 		super(
 			"Extra Returns Remover",
 			"tools",
